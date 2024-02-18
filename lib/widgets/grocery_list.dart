@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shopping_list/data/categories.dart';
-import 'package:shopping_list/models/category.dart';
 import 'dart:convert';
 
 import 'package:shopping_list/models/grocery_item.dart';
@@ -29,14 +28,15 @@ class _GroceryListState extends State<GroceryList> {
       },
     );
 
-    final Map<String, dynamic> listData =
-        json.decode(response.body);
+    final Map<String, dynamic> listData = json.decode(response.body);
 
     final List<GroceryItem> loadedItems = [];
-    
+
     for (var item in listData.entries) {
-      final category = categories.entries.firstWhere(
-          (element) => element.value.title == item.value['category']).value;
+      final category = categories.entries
+          .firstWhere(
+              (element) => element.value.title == item.value['category'])
+          .value;
       loadedItems.add(GroceryItem(
         id: item.key,
         name: item.value['name'],
@@ -50,10 +50,15 @@ class _GroceryListState extends State<GroceryList> {
   }
 
   void _addNewItem() async {
-    await Navigator.of(context).push<GroceryItem>(MaterialPageRoute(
+    final newItem = await Navigator.of(context).push<GroceryItem>(MaterialPageRoute(
       builder: (ctx) => const NewItem(),
     ));
-    _loadItems();
+
+    if (newItem == null) return;
+
+    setState(() {
+      _groceryItems.add(newItem);
+    });
   }
 
   void _removeItem(GroceryItem item) {
