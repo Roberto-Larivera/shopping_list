@@ -40,23 +40,12 @@ class _NewItemState extends State<NewItem> {
             'category': _selectedCategory.title,
           },
         ),
-      )
-          //     .then((value) {
-          //   // print(value.body);
-          // })
-          ;
-      print(response.body);
-      print(response.statusCode);
+      );
       
       if (!context.mounted) {
         return;
       }
       Navigator.of(context).pop();
-      // if (response.statusCode) {
-
-      // }
-
-      // Navigator.of(context).pop();
     }
   }
 
