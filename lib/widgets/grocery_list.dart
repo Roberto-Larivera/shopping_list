@@ -19,6 +19,15 @@ class _GroceryListState extends State<GroceryList> {
   bool _isLoading = true;
   String? _error;
 
+  void _showInfoMessage(String message) {
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+      ),
+    );
+  }
+
   void _loadItems() async {
     final url = Uri.https(
         'shopping-list-backend-53b85-default-rtdb.firebaseio.com',
@@ -66,12 +75,23 @@ class _GroceryListState extends State<GroceryList> {
     setState(() {
       _groceryItems.add(newItem);
     });
+    _showInfoMessage('Item added!');
   }
 
-  void _removeItem(GroceryItem item) {
-    setState(() {
-      _groceryItems.remove(item);
-    });
+  void _removeItem(GroceryItem item) async {
+    final url = Uri.https(
+        'shopping-list-backend-53b85-default-rtdb.firebaseio.com',
+        'shopping-list/${item.id}.json');
+    final response = await http.delete(url);
+
+    if (response.statusCode == 200) {
+      setState(() {
+        _groceryItems.remove(item);
+      });
+      _showInfoMessage('Item removed!');
+    }else{
+      _showInfoMessage('Failed to remove item!');
+    }
   }
 
   @override
