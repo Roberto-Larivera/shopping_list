@@ -23,42 +23,59 @@ class _NewItemState extends State<NewItem> {
   var _selectedCategory = categories[Categories.other]!;
   bool _isSending = false;
 
+  void _showInfoMessage(String message) {
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+      ),
+    );
+  }
+
   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       setState(() {
         _isSending = true;
       });
-      final url = Uri.https(
-          'shopping-list-backend-53b85-default-rtdb.firebaseio.com',
-          'shopping-list.json');
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: json.encode(
-          {
-            'name': _enteredName,
-            'quantity': _enteredQuantity,
-            'category': _selectedCategory.title,
+      try {
+        final url = Uri.https(
+            'shopping-list-backend-53b85-default-rtdb.firebaseio.com',
+            'shopping-list.json');
+        final response = await http.post(
+          url,
+          headers: {
+            'Content-Type': 'application/json',
           },
-        ),
-      );
+          body: json.encode(
+            {
+              'name': _enteredName,
+              'quantity': _enteredQuantity,
+              'category': _selectedCategory.title,
+            },
+          ),
+        );
 
-      final Map<String, dynamic> listData = json.decode(response.body);
+        final Map<String, dynamic> listData = json.decode(response.body);
 
-      if (!context.mounted) {
-        return;
+        if (!context.mounted) {
+          return;
+        }
+        Navigator.of(context).pop(
+          GroceryItem(
+            id: listData['name'],
+            name: _enteredName,
+            quantity: _enteredQuantity,
+            category: _selectedCategory,
+          ),
+        );
+      } catch (error) {
+        _showInfoMessage('Failed to add item. Please try again later.');
+      } finally {
+        setState(() {
+          _isSending = false;
+        });
       }
-      Navigator.of(context).pop(
-        GroceryItem(
-          id: listData['name'],
-          name: _enteredName,
-          quantity: _enteredQuantity,
-          category: _selectedCategory,
-        ),
-      );
     }
   }
 
