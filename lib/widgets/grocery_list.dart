@@ -16,17 +16,22 @@ class GroceryList extends StatefulWidget {
 
 class _GroceryListState extends State<GroceryList> {
   List<GroceryItem> _groceryItems = [];
+  bool _isLoading = true;
+  String? _error;
 
   void _loadItems() async {
     final url = Uri.https(
         'shopping-list-backend-53b85-default-rtdb.firebaseio.com',
         'shopping-list.json');
-    final response = await http.get(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    );
+    final response = await http.get(url);
+
+    if (response.statusCode >= 400) {
+      setState(() {
+        _error = 'Failed to load groceries. Please try again later.';
+        _isLoading = false;
+      });
+      return;
+    }
 
     final Map<String, dynamic> listData = json.decode(response.body);
 
@@ -46,11 +51,13 @@ class _GroceryListState extends State<GroceryList> {
     }
     setState(() {
       _groceryItems = loadedItems;
+      _isLoading = false;
     });
   }
 
   void _addNewItem() async {
-    final newItem = await Navigator.of(context).push<GroceryItem>(MaterialPageRoute(
+    final newItem =
+        await Navigator.of(context).push<GroceryItem>(MaterialPageRoute(
       builder: (ctx) => const NewItem(),
     ));
 
@@ -78,6 +85,13 @@ class _GroceryListState extends State<GroceryList> {
     Widget content = const Center(
       child: Text('No items yet!'),
     );
+
+    if (_isLoading) {
+      content = const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
     if (_groceryItems.isNotEmpty) {
       content = ListView.builder(
         itemCount: _groceryItems.length,
@@ -96,6 +110,12 @@ class _GroceryListState extends State<GroceryList> {
             trailing: Text('${_groceryItems[index].quantity}'),
           ),
         ),
+      );
+    }
+
+    if (_error != null) {
+      content = Center(
+        child: Text(_error!),
       );
     }
 
